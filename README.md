@@ -10,20 +10,30 @@
 
 **核心边界：只收大会「场外」的非官方周边活动**（晚宴 / Mixer / Party / Coffee Chat / 闭门交流 / 招聘晚宴等），不收官方 keynote / tutorial / workshop / 展台活动。
 
+## 安装（3 步，像装个软件一样简单）
+
+**用 Claude Code 的：**
+
+1. 下载本仓库（页面右上角绿色 `Code` 按钮 → `Download ZIP`，解压；会用 git 的直接 clone）
+2. 把整个文件夹复制到 `~/.claude/skills/side-event-scout/`（Mac 上在终端执行：`cp -r 解压后的文件夹路径 ~/.claude/skills/side-event-scout`）
+3. 重新打开 Claude Code，就装好了
+
+**用 Codex 或其他 AI 编程工具的**：只需要 `portable/skill.md` 这一个文件，放进你工具的自定义指令/skill 目录即可（格式规范已内嵌，不依赖其他文件）。
+
 ## 用法
 
-一句自然语言即可：
+对 AI 说一句话即可：
 
 > 帮我整理 WAIC 2026 的 Side Events
 
-跑完直接返回：飞书表格链接 + 分级统计 + S/A 级活动点名 + 搜索覆盖说明。
+它会自动搜索、整理、评级，最后**问你要哪种交付形式**：
 
-## 两个版本
+- **A. 直接生成飞书表格**（需要装好 lark-cli 飞书命令行工具并授权你的飞书账号；没装也没关系，AI 会带你弄，或者直接选 B）
+- **B. 生成 CSV 表格文件**（什么都不用装；拿到文件后在飞书里"新建 → 导入"上传，或直接用 Excel 打开）
 
-| 版本 | 路径 | 适用 |
-|------|------|------|
-| Claude Code 版 | `SKILL.md` + `references/format.md` | 放入 `~/.claude/skills/side-event-scout/`，触发词见 SKILL.md frontmatter |
-| 通用版（单文件自包含） | `portable/skill.md` | Claude Code / Codex 均可用；格式规范内嵌，工具描述中性化，输出按环境能力降级（有 lark-cli 写飞书，没有输出 CSV） |
+跑完返回：表格（链接或文件）+ 分级统计 + S/A 级活动点名 + 搜索覆盖说明。
+
+💡 **最佳使用时机是大会开始前 1-2 周**：周边活动信息在大会结束后会快速下线（Luma 下沉、聚合站删列表），赛后再查能找到的会少很多。
 
 ## 试跑记录
 
