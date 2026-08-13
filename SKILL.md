@@ -1,0 +1,91 @@
+---
+name: side-event-scout
+description: 大会周边活动（Side Events）自动搜集与整理。给定大会名称（如 WAIC 2026、ICML 2026、NeurIPS 2026），自动确定大会时间地点，搜索 Luma 等信息源上大会期间的非官方周边活动（Dinner、Mixer、Party、Coffee Chat、闭门交流等），筛选、去重、按 ZP 固定表格格式整理（附推荐等级 S/A/B/C），按日期排序输出可直接使用的 Side Event List，最终交付为飞书表格。触发词：side event、side events、周边活动、场外活动、"整理 XX 的 Side Events"。
+---
+
+# Side Event Scout
+
+把「人工找 Side Events + 人工整理表格」自动化。输入一个大会名称，输出一份按 ZP 固定格式整理、按日期排序（附 S/A/B/C 推荐等级）的 Side Event List。
+
+**核心边界（最重要的一条规则）：只收大会「场外」的非官方周边活动，不收大会官方日程内的活动。** 要的是阿里云晚宴、MiniMax 线下交流会这类白天逛完正式展会后、偏休闲和 connect 属性的活动；不要大会官方的 keynote、tutorial、官方 workshop、官方展区活动。
+
+## 工作流
+
+### Step 0 — 理解大会
+
+用 web search 确认大会的：正式名称与常用缩写（含中英文）、举办日期、举办城市与主会场、核心人群（researchers / founders / investors / 开发者…）。
+
+搜索时间窗 = 大会日期前 3 天到后 1 天（周边活动常在开幕前扎堆）。
+
+### Step 1 — 多路搜索
+
+用 `WebSearch`（或环境里其他可用的 web search 工具）跑多组查询，每组都要跑，不要只跑一两条就停。国际大会以 Luma 为主力源，中国大会（WAIC 等）以微信/媒体盘点为主力源：
+
+1. **优先找 Luma Events Calendar 聚合页**（单页聚合几十个周边活动，产出最高）：搜 `site:luma.com <缩写> calendar`、直接试 `luma.com/<缩写>` 和 `luma.com/<缩写><年份>`，以及 "Road to <大会> (Unofficial Community Events)" 这类社区日历；找到后抓取日历页上的全部活动链接。⚠️ Luma 官方日历页（如 `luma.com/icml`）是 JS 渲染的，WebFetch 只能拿到空壳——遇到这种情况必须用 Chrome 浏览器工具（claude-in-chrome）打开真实页面滚动抓全列表；社区日历一般可直接 WebFetch，但覆盖不全，不能只依赖一个日历
+2. **行业媒体盘点文章**（中文活动最高产源）：搜 `<大会名> 场外活动/线下活动/晚宴 盘点/总览/汇总`，重点看雷峰网、机器之心、量子位、新智元——一篇盘点文常覆盖十几个只在微信发布的大厂/基金活动
+3. `site:luma.com "<大会名>"` 和 `site:luma.com <缩写> <年份>`（luma.com 与 lu.ma 都算），多轮换词：afterparty / happy hour / dinner / mixer / reception / social / night / lunch——单靠一两条 query 会漏掉大量不在日历上的独立 Luma 活动
+4. `<大会名> side event / mixer / dinner / party / happy hour / reception / meetup`
+5. **定向搜高频主办方**：大厂（字节、腾讯、阿里、华为、小米、快手、蚂蚁、MiniMax）和量化基金（九坤、幻方、明汯、衍复、Ubiquant、佳期）几乎每个 AI 顶会都办招聘/学术晚宴，且多数只在微信发布——逐个搜 `<公司名> <大会缩写> 晚宴/交流会/学术之夜`
+6. `<大会名> 晚宴 / 交流会 / 酒会 / 线下活动`（中文大会或中国公司主办的活动常只在微信公众号/小红书发布）
+7. **Side Event 聚合站**（中国大会的"Luma 日历"等价物）：WaytoAGI Side Events（如 `waic.waytoagi.com`，按大会找对应子站）、`aieventmap.com`、活动行 `huodongxing.com`。⚠️ 大会结束后聚合站常把历史列表下线——用 Wayback Machine 回溯：`curl -sL "https://web.archive.org/web/<大会期间时间戳>000000/<聚合站URL>"`（WebFetch 不支持 web.archive.org，必须用 curl；429 限流就间隔重试），从快照 HTML 里提取活动详情页链接再逐个抓存档
+8. Luma 城市发现页：`https://luma.com/discover` 下对应城市页，扫时间窗内的活动
+9. 补充源（能搜到就收，Source 如实标注）：Eventbrite、Partiful、微信公众号文章、小红书、Twitter/X、知乎（RTE 开发者社区等常发盘点帖）
+
+对每个候选活动，用 `WebFetch`（或其他可用的网页抓取工具）打开活动页，提取完整信息。搜索结果摘要不足以填表，**必须打开活动页原文**（活动已过期页面通常仍可访问）。候选活动多（>20 个）时，分批交给并行子 agent 抓取，每个 agent 返回结构化 JSON。
+
+**停止条件**：连续 2 轮新查询没有发现新活动，才算搜完。最后在报告里如实说明搜了哪些源、哪些没搜。
+
+### Step 2 — 筛选
+
+**收录**（场外周边，供参会人群 connect / 休闲）：
+- Private Dinner / 晚宴、Mixer / Party / Reception / Happy Hour
+- Coffee Chat / Café takeover / Coworking space
+- 闭门交流、Salon、Demo Night、社群 Meetup、招聘晚宴（大厂 talent night 也算，人群匹配即可）
+
+**排除**：
+- 大会官方日程内的活动（官方 workshop / tutorial / keynote / 官方 expo booth 活动）
+- 与大会无关的同城活动：活动页没提大会、也看不出面向大会人群的，不收
+- 纯线上活动、纯广告 webinar
+
+判断标准：活动页明确提到大会（@ICML、before WAIC 等），或时间地点+人群明显是冲着大会参会者来的。拿不准的收进去、推荐等级给 C 并在备注说明，不要静默丢弃。
+
+### Step 3 — 提取字段 + 去重
+
+每个活动按 [references/format.md](references/format.md) 的固定列填写。信息缺失的字段填 `/`，不要编造。活动页本身缺日期/时间时，可用日历聚合页或盘点文章里标注的日期回填（这也是可信来源）。
+
+去重规则：
+- 主键：标题归一化（去 emoji / 标点 / 大小写）+ 日期；同名同日 = 同一活动
+- 同主办方 + 同日 + 同时段 + 同地点，即使标题不同也疑似重复（同一活动多平台发布），合并成一条
+- 合并时保留信息最全的一条，报名链接可多个并列，Source 并列标注
+- 注意反例：同一主办方的**系列活动**（如同一公司连办三晚 dinner、同一日历下的多场 café 活动）不是重复，按不同日期/场次分行列出
+- ⚠️ 不要用来源 URL 当去重主键：一篇媒体盘点文章会覆盖多个活动（同 URL ≠ 同活动）；只有活动平台链接（Luma/Partiful/Eventbrite）的同 slug 才能判定同一活动
+
+### Step 4 — 推荐等级 S / A / B / C
+
+综合四个维度打分，推荐原因一句话点明关键维度：
+
+| 维度 | 看什么 |
+|------|--------|
+| 主办方质量 | 一线 lab / 知名基金 / 明星公司 / 有影响力社群 > 无名主办方 |
+| 人群匹配 | 面向 founders / researchers / investors 等目标人群的精准活动 > 泛人群 |
+| 规模与深度 | 小规模 / 邀请制 / curated 名单（深度 networking）> 大规模开放（易参加但泛） |
+| 信息可信度 | 信息完整、报名通道明确 > 信息残缺、真假难辨 |
+
+- **S**：主办方一线 + 人群高度匹配 + 小规模/邀请制，networking 价值极高
+- **A**：主办方质量好、人群匹配，规模中等或开放报名
+- **B**：大规模开放活动，容易参加但人群较泛，深度 networking 价值一般
+- **C**：相关性弱 / 信息不全 / 纯宣传性质，但仍可能有价值，留给读者自判
+
+### Step 5 — 输出
+
+**最终交付物是飞书电子表格**（和 ZP 人工表同样的形式），markdown 只是中间产物。
+
+1. **本地 markdown**（先产出，便于 review）：**按日期升序排序**（与 ZP 表一致；推荐等级只是一列信息，不改变排序），另附一段「搜索覆盖说明」（搜了哪些源、时间窗、收录/排除了多少）。
+2. **飞书电子表格**：按 [references/format.md](references/format.md) 的布局写入新表格，按日期升序。写表必须走 `lark-sheets` skill（先读它的 SKILL.md 及其要求的前置文档）：新建表用 `+workbook-create --values -`（stdin 传 JSON 二维数组，全文本列，含品牌行/标题行/表头/数据行）；修正已建的表用 `+csv-put --start-cell A1` 整体覆写。
+3. 最后把飞书表格链接和分级统计（S×n / A×n / B×n / C×n）汇报给用户，S/A 级活动在汇报里单独点名。
+
+## 注意
+
+- 中国大会（WAIC 等）的周边活动大量只在微信公众号 / 小红书发布，Luma 覆盖不到，报告里必须提醒这一局限
+- 活动信息随时会变（改期、改场地、报名截止），表格里记录的是抓取时点的信息；抓取日期写进表格的说明行
+- 不要把同一大会往年的活动混进来，日期必须落在本届时间窗内
