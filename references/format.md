@@ -1,6 +1,6 @@
 # Side Event List 固定表格格式
 
-以 ZP 整理的《ICML 2026 Reception》表为准（https://my.feishu.cn/wiki/OWWdwceRjihZXtk6HemctHPrnuc），前 8 列与其完全一致，后 4 列为本 skill 追加。
+以 ZP 整理的《ICML 2026 Reception》表为准（内部飞书 wiki），前 8 列与其完全一致，后 4 列为本 skill 追加。
 
 ## 表格布局（飞书表格）
 
