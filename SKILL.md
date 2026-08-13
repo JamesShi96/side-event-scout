@@ -1,11 +1,11 @@
 ---
 name: side-event-scout
-description: 大会周边活动（Side Events）自动搜集与整理。给定大会名称（如 WAIC 2026、ICML 2026、NeurIPS 2026），自动确定大会时间地点，搜索 Luma 等信息源上大会期间的非官方周边活动（Dinner、Mixer、Party、Coffee Chat、闭门交流等），筛选、去重、按 ZP 固定表格格式整理（附推荐等级 S/A/B/C），按日期排序输出可直接使用的 Side Event List，最终交付为飞书表格。触发词：side event、side events、周边活动、场外活动、"整理 XX 的 Side Events"。
+description: 大会周边活动（Side Events）自动搜集与整理。给定大会名称（如 WAIC 2026、ICML 2026、NeurIPS 2026），自动确定大会时间地点，搜索 Luma 等信息源上大会期间的非官方周边活动（Dinner、Mixer、Party、Coffee Chat、闭门交流等），筛选、去重、按固定 12 列表格格式整理（附推荐等级 S/A/B/C），按日期排序输出可直接使用的 Side Event List，最终交付为飞书表格。触发词：side event、side events、周边活动、场外活动、"整理 XX 的 Side Events"。
 ---
 
 # Side Event Scout
 
-把「人工找 Side Events + 人工整理表格」自动化。输入一个大会名称，输出一份按 ZP 固定格式整理、按日期排序（附 S/A/B/C 推荐等级）的 Side Event List。
+把「人工找 Side Events + 人工整理表格」自动化。输入一个大会名称，输出一份按固定 12 列格式整理、按日期排序（附 S/A/B/C 推荐等级）的 Side Event List。
 
 **核心边界（最重要的一条规则）：只收大会「场外」的非官方周边活动，不收大会官方日程内的活动。** 要的是阿里云晚宴、MiniMax 线下交流会这类白天逛完正式展会后、偏休闲和 connect 属性的活动；不要大会官方的 keynote、tutorial、官方 workshop、官方展区活动。
 
@@ -80,11 +80,11 @@ description: 大会周边活动（Side Events）自动搜集与整理。给定�
 
 ### Step 5 — 输出
 
-1. **本地 markdown**（先产出，便于 review）：**按日期升序排序**（与 ZP 表一致；推荐等级只是一列信息，不改变排序），另附一段「搜索覆盖说明」（搜了哪些源、时间窗、收录/排除了多少）。
+1. **本地 markdown**（先产出，便于 review）：**按日期升序排序**（推荐等级只是一列信息，不改变排序），另附一段「搜索覆盖说明」（搜了哪些源、时间窗、收录/排除了多少）。
 2. **问用户要哪种交付形式**（用大白话问，不要甩术语）。先自查环境里有没有可用的飞书写表工具（`lark-cli` / `lark-sheets` skill），然后给用户两个选项：
    - **A. 直接生成飞书表格**：需要电脑上装好 lark-cli 并授权过飞书账号。如果检测到没装/没授权，如实告诉用户"需要先安装并授权飞书命令行工具，我可以带你一步步弄"，用户不想弄就走 B。
    - **B. 生成 CSV 文件**：不需要任何飞书工具，直接给一个表格文件，用户可以自己上传到飞书（飞书里"新建 → 导入"即可）或用 Excel 打开。
-3. **飞书表格**（用户选 A）：按 [references/format.md](references/format.md) 的布局写入新表格，按日期升序。写表必须走 `lark-sheets` skill（先读它的 SKILL.md 及其要求的前置文档）：新建表用 `+workbook-create --values -`（stdin 传 JSON 二维数组，全文本列，含品牌行/标题行/表头/数据行）；修正已建的表用 `+csv-put --start-cell A1` 整体覆写。
+3. **飞书表格**（用户选 A）：按 [references/format.md](references/format.md) 的布局写入新表格，按日期升序。写表必须走 `lark-sheets` skill（先读它的 SKILL.md 及其要求的前置文档）：新建表用 `+workbook-create --values -`（stdin 传 JSON 二维数组，全文本列，含标题行/表头/数据行）；修正已建的表用 `+csv-put --start-cell A1` 整体覆写。
    **CSV 文件**（用户选 B）：按同样的列输出 UTF-8 带 BOM 的 CSV（Excel 打开不乱码），告诉用户文件在哪、怎么导入飞书。
 4. 最后把交付物（飞书表格链接或 CSV 文件路径）和分级统计（S×n / A×n / B×n / C×n）汇报给用户，S/A 级活动在汇报里单独点名。
 

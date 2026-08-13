@@ -78,14 +78,14 @@
 
 **排序：按日期升序**（推荐等级只是一列信息，不改变排序）。
 
-表格布局（与 ZP 固定模板一致）：
-- 第 1 行品牌行：A 列 `感谢大家关注Z Potentials公众号🫱https://postimg.cc/ZBDQTfTS\nFollow us on:\nhttps://www.linkedin.com/company/z-potentials`；E 列 `更多Private Event信息请加入wx社群：\nIf want to marketing your event/expo, plz connect zgroup0515@gmail.com`
-- 第 2 行标题行：`<大会缩写>线下活动总览-ZP整理`（附 `信息抓取于 <日期>`）
-- 第 3 行表头（上表 12 列）
-- 第 4 行起一行一个活动
+表格布局：
+- 第 1 行标题行：`<大会缩写>线下活动总览`（附 `信息抓取于 <日期>`）
+- 第 2 行表头（上表 12 列）
+- 第 3 行起一行一个活动
+- 如用户想在顶部加自己团队的品牌行/联系方式，按用户要求在标题行上方插一行即可，默认不加
 
 输出前**用大白话问用户要哪种交付形式**（先自查环境里有没有可用的飞书写表工具）：
-1. **直接生成飞书表格**：需要装好 lark-cli（或飞书 MCP）并授权过飞书账号。有则用 `lark-cli sheets +workbook-create --title "<大会> Side Events" --values -`（stdin 传 JSON 二维数组，含上述品牌行/标题行/表头/数据行）建新表，把表格 URL 给用户；检测到没装/没授权时如实告知，愿意装就带用户一步步弄，不愿意走 2
+1. **直接生成飞书表格**：需要装好 lark-cli（或飞书 MCP）并授权过飞书账号。有则用 `lark-cli sheets +workbook-create --title "<大会> Side Events" --values -`（stdin 传 JSON 二维数组，含上述标题行/表头/数据行）建新表，把表格 URL 给用户；检测到没装/没授权时如实告知，愿意装就带用户一步步弄，不愿意走 2
 2. **生成 CSV 文件**：不需要任何飞书工具，输出 UTF-8 带 BOM 的 CSV（Excel 打开不乱码）+ markdown 表格，告诉用户文件在哪、可以在飞书里"新建 → 导入"上传，或直接用 Excel 打开
 
 最后汇报：表格链接（或文件）、活动总数与分级统计（S×n/A×n/B×n/C×n）、S/A 级活动单独点名、搜索覆盖说明（搜了哪些源、哪些盲区——如微信 only 活动、纯邀请制无公开页面的活动）。

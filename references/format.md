@@ -1,13 +1,13 @@
 # Side Event List 固定表格格式
 
-以 ZP 整理的《ICML 2026 Reception》表为准（内部飞书 wiki），前 8 列与其完全一致，后 4 列为本 skill 追加。
+前 8 列沿用行业内人工整理 Side Event 表的通用列，后 4 列为本 skill 追加。
 
 ## 表格布局（飞书表格）
 
-- 第 1 行：品牌行 —— A 列 `感谢大家关注Z Potentials公众号🫱https://postimg.cc/ZBDQTfTS\nFollow us on:\nhttps://www.linkedin.com/company/z-potentials`；E 列 `更多Private Event信息请加入wx社群：\nIf want to marketing your event/expo, plz connect zgroup0515@gmail.com`
-- 第 2 行：标题行 —— `<大会缩写>线下活动总览-ZP整理`（如 `WAIC 2026线下活动总览-ZP整理`），可附一句 `信息抓取于 <日期>`
-- 第 3 行：表头（见下）
-- 第 4 行起：一行一个活动
+- 第 1 行：标题行 —— `<大会缩写>线下活动总览`（如 `WAIC 2026线下活动总览`），附一句 `信息抓取于 <日期>`
+- 第 2 行：表头（见下）
+- 第 3 行起：一行一个活动
+- 如用户所在团队想在表格顶部加自己的品牌行/联系方式（如公众号、社群入口），按用户口头要求在标题行上方插一行即可，默认不加
 
 ## 列定义
 
@@ -28,7 +28,7 @@
 
 ## 排序
 
-**按日期升序**（与 ZP 原表一致），同日内顺序不限。推荐等级是列信息，不参与排序；S/A 级活动在最终汇报里单独点名即可。
+**按日期升序**，同日内顺序不限。推荐等级是列信息，不参与排序；S/A 级活动在最终汇报里单独点名即可。
 
 ## 示例行
 
@@ -41,7 +41,7 @@
 
 ## 写入飞书的实现要点
 
-- 用 `lark-sheets` 的 `+workbook-create --values -`（stdin 传 JSON 二维数组）一步建表 + 写入；列全部为文本（日期列保持 `2026.7.27` 文本格式，与 ZP 原表一致），所以用 untyped 的 `--values` 即可，不需要 `--sheets` typed 协议；后续修正数据用 `+csv-put --start-cell A1` 整体覆写
+- 用 `lark-sheets` 的 `+workbook-create --values -`（stdin 传 JSON 二维数组）一步建表 + 写入；列全部为文本（日期列保持 `2026.7.27` 文本格式），所以用 untyped 的 `--values` 即可，不需要 `--sheets` typed 协议；后续修正数据用 `+csv-put --start-cell A1` 整体覆写
 - sheet 名：`<大会缩写> <年份> Side Events`（如 `WAIC 2026 Side Events`）
-- 不做合并单元格（ZP 原表按日期合并是人工美化，非必需）；如需美化，表头行加背景色即可
+- 不做合并单元格（人工表按日期合并单元格属于美化，非必需）；如需美化，表头行加背景色即可
 - 建完表把 URL 交给用户；如用户指定了目标文件夹或 wiki 位置，用 `--folder-token` 或后续用 lark-wiki / lark-drive 移动
